@@ -101,8 +101,8 @@ class M7LivelynessDetection {
   /// * contourColor - Color of the points that are plotted on the face while detecting.
   void configure({
     required List<M7DetectionThreshold> thresholds,
-    Color lineColor = const Color(0xffab48e0),
-    Color dotColor = const Color(0xffab48e0),
+    Color lineColor = Colors.transparent,
+    Color dotColor = Colors.transparent,
     double lineWidth = 1.6,
     double dotSize = 2.0,
     bool displayLines = true,
