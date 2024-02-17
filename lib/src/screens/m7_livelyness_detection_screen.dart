@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:developer';
 import 'dart:ui' as ui;
 
 import 'package:collection/collection.dart';
@@ -9,6 +8,7 @@ List<CameraDescription> availableCams = [];
 
 class M7LivelynessDetectionScreenV1 extends StatefulWidget {
   final M7DetectionConfig config;
+
   const M7LivelynessDetectionScreenV1({
     required this.config,
     super.key,
@@ -176,26 +176,16 @@ class _MLivelyness7DetectionScreenState
     );
     if (inputImageFormat == null) return;
 
-    final planeData = cameraImage.planes.map(
-      (Plane plane) {
-        return InputImagePlaneMetadata(
-          bytesPerRow: plane.bytesPerRow,
-          height: plane.height,
-          width: plane.width,
-        );
-      },
-    ).toList();
-
-    final inputImageData = InputImageData(
+    final inputImageData = InputImageMetadata(
       size: imageSize,
-      imageRotation: imageRotation,
-      inputImageFormat: inputImageFormat,
-      planeData: planeData,
+      rotation: imageRotation,
+      format: inputImageFormat,
+      bytesPerRow: cameraImage.planes.first.bytesPerRow,
     );
 
     final inputImage = InputImage.fromBytes(
       bytes: bytes,
-      inputImageData: inputImageData,
+      metadata: inputImageData,
     );
 
     _processImage(inputImage);
@@ -208,16 +198,15 @@ class _MLivelyness7DetectionScreenState
     _isBusy = true;
     final faces = await M7MLHelper.instance.processInputImage(inputImage);
     print("faces :- ${faces.length}");
-    if (inputImage.inputImageData?.size != null &&
-        inputImage.inputImageData?.imageRotation != null) {
+    if (inputImage.metadata != null) {
       if (faces.isEmpty) {
         _resetSteps();
       } else {
         final firstFace = faces.first;
         final painter = M7FaceDetectorPainter(
           firstFace,
-          inputImage.inputImageData!.size,
-          inputImage.inputImageData!.imageRotation,
+          inputImage.metadata!.size,
+          inputImage.metadata!.rotation,
         );
         _customPaint = CustomPaint(
           painter: painter,
