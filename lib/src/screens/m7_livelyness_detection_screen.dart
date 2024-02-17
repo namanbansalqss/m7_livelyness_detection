@@ -6,20 +6,21 @@ import 'package:m7_livelyness_detection/index.dart';
 
 List<CameraDescription> availableCams = [];
 
-class M7LivelynessDetectionScreen extends StatefulWidget {
+class M7LivelynessDetectionScreenV1 extends StatefulWidget {
   final M7DetectionConfig config;
-  const M7LivelynessDetectionScreen({
+
+  const M7LivelynessDetectionScreenV1({
     required this.config,
     super.key,
   });
 
   @override
-  State<M7LivelynessDetectionScreen> createState() =>
+  State<M7LivelynessDetectionScreenV1> createState() =>
       _MLivelyness7DetectionScreenState();
 }
 
 class _MLivelyness7DetectionScreenState
-    extends State<M7LivelynessDetectionScreen> {
+    extends State<M7LivelynessDetectionScreenV1> {
   //* MARK: - Private Variables
   //? =========================================================
   late bool _isInfoStepCompleted;
@@ -37,6 +38,8 @@ class _MLivelyness7DetectionScreenState
   bool _isCaptureButtonVisible = false;
 
   late final List<M7LivelynessStepItem> _steps;
+
+  ValueNotifier<List<double>> smileProgress = ValueNotifier<List<double>>([]);
 
   //* MARK: - Life Cycle Methods
   //? =========================================================
@@ -74,6 +77,8 @@ class _MLivelyness7DetectionScreenState
   }
 
   void _postFrameCallBack() async {
+    print('started dettection');
+
     availableCams = await availableCameras();
     if (availableCams.any(
       (element) =>
@@ -171,26 +176,16 @@ class _MLivelyness7DetectionScreenState
     );
     if (inputImageFormat == null) return;
 
-    final planeData = cameraImage.planes.map(
-      (Plane plane) {
-        return InputImagePlaneMetadata(
-          bytesPerRow: plane.bytesPerRow,
-          height: plane.height,
-          width: plane.width,
-        );
-      },
-    ).toList();
-
-    final inputImageData = InputImageData(
+    final inputImageData = InputImageMetadata(
       size: imageSize,
-      imageRotation: imageRotation,
-      inputImageFormat: inputImageFormat,
-      planeData: planeData,
+      rotation: imageRotation,
+      format: inputImageFormat,
+      bytesPerRow: cameraImage.planes.first.bytesPerRow,
     );
 
     final inputImage = InputImage.fromBytes(
       bytes: bytes,
-      inputImageData: inputImageData,
+      metadata: inputImageData,
     );
 
     _processImage(inputImage);
@@ -202,17 +197,16 @@ class _MLivelyness7DetectionScreenState
     }
     _isBusy = true;
     final faces = await M7MLHelper.instance.processInputImage(inputImage);
-
-    if (inputImage.inputImageData?.size != null &&
-        inputImage.inputImageData?.imageRotation != null) {
+    print("faces :- ${faces.length}");
+    if (inputImage.metadata != null) {
       if (faces.isEmpty) {
         _resetSteps();
       } else {
         final firstFace = faces.first;
         final painter = M7FaceDetectorPainter(
           firstFace,
-          inputImage.inputImageData!.size,
-          inputImage.inputImageData!.imageRotation,
+          inputImage.metadata!.size,
+          inputImage.metadata!.rotation,
         );
         _customPaint = CustomPaint(
           painter: painter,
@@ -238,6 +232,7 @@ class _MLivelyness7DetectionScreenState
             }
           }
         }
+
         _detect(
           face: faces.first,
           step: _steps[_stepsKey.currentState?.currentIndex ?? 0].step,
@@ -266,10 +261,45 @@ class _MLivelyness7DetectionScreenState
       setState(() {});
     }
     await _stepsKey.currentState?.nextPage();
+    if (_steps[indexToUpdate].step == M7LivelynessStep.smile) {
+      smileProgress.removeListener(calculateSmileProgression);
+    }
     _stopProcessing();
   }
 
-  void _takePicture() async {
+  void initiateSmileDetector() {
+    if (_steps[_stepsKey.currentState?.currentIndex ?? 0].step ==
+            M7LivelynessStep.smile &&
+        !_steps[_stepsKey.currentState?.currentIndex ?? 0].isCompleted) {
+      smileProgress.addListener(calculateSmileProgression);
+    }
+  }
+
+  Future<void> calculateSmileProgression() async {
+    print("smile progress length ${smileProgress.value.length}");
+    if (smileProgress.value.length >= 10) {
+      final M7SmileDetectionThreshold? smileThreshold =
+          M7LivelynessDetection.instance.thresholdConfig.firstWhereOrNull(
+        (p0) => p0 is M7SmileDetectionThreshold,
+      ) as M7SmileDetectionThreshold?;
+      final smileFaces = smileProgress.value
+          .where((element) => (element > (smileThreshold?.probability ?? 0.75)))
+          .length;
+      final midSmileFaces = smileProgress.value
+          .where((element) => (element > 0.5 && element < 0.75))
+          .length;
+      final noSmileFaces =
+          smileProgress.value.where((element) => (element < 0.5)).length;
+      if (smileFaces > 0 && midSmileFaces > 0 && noSmileFaces > 0) {
+        await _completeStep(
+            step: _steps[_stepsKey.currentState?.currentIndex ?? 0].step);
+      }
+    }
+  }
+
+  void _takePicture({
+    required bool didCaptureAutomatically,
+  }) async {
     try {
       if (_cameraController == null) return;
       // if (face == null) return;
@@ -285,7 +315,10 @@ class _MLivelyness7DetectionScreenState
         _startLiveFeed();
         return;
       }
-      _onDetectionCompleted(imgToReturn: clickedImage);
+      _onDetectionCompleted(
+        imgToReturn: clickedImage,
+        didCaptureAutomatically: didCaptureAutomatically,
+      );
     } catch (e) {
       _startLiveFeed();
     }
@@ -293,9 +326,19 @@ class _MLivelyness7DetectionScreenState
 
   void _onDetectionCompleted({
     XFile? imgToReturn,
+    bool? didCaptureAutomatically,
   }) {
-    final String? imgPath = imgToReturn?.path;
-    Navigator.of(context).pop(imgPath);
+    final String imgPath = imgToReturn?.path ?? "";
+    if (imgPath.isEmpty || didCaptureAutomatically == null) {
+      Navigator.of(context).pop(null);
+      return;
+    }
+    Navigator.of(context).pop(
+      M7CapturedImage(
+        imgPath: imgPath,
+        didCaptureAutomatically: didCaptureAutomatically,
+      ),
+    );
   }
 
   void _resetSteps() async {
@@ -342,6 +385,26 @@ class _MLivelyness7DetectionScreenState
     if (_isProcessingStep) {
       return;
     }
+    final faceWidth = face.boundingBox.width;
+    final Point<int>? leftEyePosition = face
+        .getContour(
+          FaceContourType.leftEye,
+        )
+        ?.points
+        .elementAt(8);
+    final Point<int>? rightEyePosition = face
+        .getContour(
+          FaceContourType.rightEye,
+        )
+        ?.points
+        .elementAt(0);
+    if (leftEyePosition != null && rightEyePosition != null) {
+      final goldenRatio = (faceWidth /
+          leftEyePosition.distanceTo(
+            rightEyePosition,
+          ));
+      print("Golden Ratio: $goldenRatio");
+    }
     switch (step) {
       case M7LivelynessStep.blink:
         final M7BlinkDetectionThreshold? blinkThreshold =
@@ -383,15 +446,13 @@ class _MLivelyness7DetectionScreenState
         }
         break;
       case M7LivelynessStep.smile:
-        final M7SmileDetectionThreshold? smileThreshold =
-            M7LivelynessDetection.instance.thresholdConfig.firstWhereOrNull(
-          (p0) => p0 is M7SmileDetectionThreshold,
-        ) as M7SmileDetectionThreshold?;
-        if ((face.smilingProbability ?? 0) >
-            (smileThreshold?.probability ?? 0.75)) {
-          _startProcessing();
-          await _completeStep(step: step);
+        print("smile probability ${face.smilingProbability}");
+
+        if (face.smilingProbability != null) {
+          smileProgress.value.add(face.smilingProbability!);
         }
+        _startProcessing();
+
         break;
     }
   }
@@ -426,6 +487,7 @@ class _MLivelyness7DetectionScreenState
               child: IconButton(
                 onPressed: () => _onDetectionCompleted(
                   imgToReturn: null,
+                  didCaptureAutomatically: null,
                 ),
                 icon: const Icon(
                   Icons.close_rounded,
@@ -477,8 +539,13 @@ class _MLivelyness7DetectionScreenState
           steps: _steps,
           onCompleted: () => Future.delayed(
             const Duration(milliseconds: 500),
-            () => _takePicture(),
+            () => _takePicture(
+              didCaptureAutomatically: true,
+            ),
           ),
+          initiateSmileDetector: () {
+            initiateSmileDetector();
+          },
         ),
         Visibility(
           visible: _isCaptureButtonVisible,
@@ -491,7 +558,9 @@ class _MLivelyness7DetectionScreenState
                 flex: 20,
               ),
               MaterialButton(
-                onPressed: () => _takePicture(),
+                onPressed: () => _takePicture(
+                  didCaptureAutomatically: false,
+                ),
                 color: widget.config.captureButtonColor ??
                     Theme.of(context).primaryColor,
                 textColor: Colors.white,
@@ -508,5 +577,42 @@ class _MLivelyness7DetectionScreenState
         ),
       ],
     );
+  }
+}
+
+extension M7FaceExt on Face {
+  FaceContour? getContour(FaceContourType type) {
+    switch (type) {
+      case FaceContourType.face:
+        return contours[FaceContourType.face];
+      case FaceContourType.leftEyebrowTop:
+        return contours[FaceContourType.leftEyebrowTop];
+      case FaceContourType.leftEyebrowBottom:
+        return contours[FaceContourType.leftEyebrowBottom];
+      case FaceContourType.rightEyebrowTop:
+        return contours[FaceContourType.rightEyebrowTop];
+      case FaceContourType.rightEyebrowBottom:
+        return contours[FaceContourType.rightEyebrowBottom];
+      case FaceContourType.leftEye:
+        return contours[FaceContourType.leftEye];
+      case FaceContourType.rightEye:
+        return contours[FaceContourType.rightEye];
+      case FaceContourType.upperLipTop:
+        return contours[FaceContourType.upperLipTop];
+      case FaceContourType.upperLipBottom:
+        return contours[FaceContourType.upperLipBottom];
+      case FaceContourType.lowerLipTop:
+        return contours[FaceContourType.lowerLipTop];
+      case FaceContourType.lowerLipBottom:
+        return contours[FaceContourType.lowerLipBottom];
+      case FaceContourType.noseBridge:
+        return contours[FaceContourType.noseBridge];
+      case FaceContourType.noseBottom:
+        return contours[FaceContourType.noseBottom];
+      case FaceContourType.leftCheek:
+        return contours[FaceContourType.leftCheek];
+      case FaceContourType.rightCheek:
+        return contours[FaceContourType.rightCheek];
+    }
   }
 }
