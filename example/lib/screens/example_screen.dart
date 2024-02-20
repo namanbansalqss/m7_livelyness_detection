@@ -44,24 +44,24 @@ class _M7ExpampleScreenState extends State<M7ExpampleScreen> {
           step: M7LivelynessStep.blink,
           title: "Blink",
           isCompleted: false,
-          detectionColor: Colors.amber,
+          // detectionColor: Colors.amber,
         ),
         M7LivelynessStepItem(
           step: M7LivelynessStep.smile,
           title: "Smile",
           isCompleted: false,
-          detectionColor: Colors.green.shade800,
+          // detectionColor: Colors.green.shade800,
         ),
       ],
     );
     M7LivelynessDetection.instance.configure(
-      lineColor: Colors.white,
-      dotColor: Colors.purple.shade800,
-      dotSize: 2.0,
-      lineWidth: 2,
-      dashValues: [2.0, 5.0],
-      displayDots: false,
-      displayLines: true,
+      // lineColor: Colors.white,
+      // dotColor: Colors.purple.shade800,
+      // dotSize: 2.0,
+      // lineWidth: 2,
+      // dashValues: [2.0, 5.0],
+      // displayDots: false,
+      // displayLines: true,
       thresholds: [
         M7SmileDetectionThreshold(
           probability: 0.8,
@@ -82,7 +82,8 @@ class _M7ExpampleScreenState extends State<M7ExpampleScreen> {
       config: M7DetectionConfig(
         steps: _veificationSteps,
         startWithInfoScreen: _startWithInfo,
-        maxSecToDetect: _timeOutDuration == 100 ? 2500 : _timeOutDuration,
+        maxSecToDetect: 2500,
+        // maxSecToDetect: _timeOutDuration == 100 ? 2500 : _timeOutDuration,
         allowAfterMaxSec: _allowAfterTimeOut,
         captureButtonColor: Colors.red,
       ),
