@@ -40,6 +40,7 @@ class _M7LivelynessDetectionScreenAndroidState
   //* MARK: - Private Variables
   //? =========================================================
   final _faceDetectionController = BehaviorSubject<FaceDetectionModel>();
+  String? imgPath;
 
   final options = FaceDetectorOptions(
     enableContours: true,
@@ -177,6 +178,18 @@ class _M7LivelynessDetectionScreenAndroidState
         _resetSteps();
         return;
       }
+      _cameraState?.when(
+        onPhotoMode: (p0) => Future.delayed(
+          const Duration(milliseconds: 500),
+          () => p0.takePhoto().then(
+            (value) {
+              setState(() {
+                imgPath = value;
+              });
+            },
+          ),
+        ),
+      );
       final Face firstFace = faces.first;
       final landmarks = firstFace.landmarks;
       // Get landmark positions for relevant facial features
@@ -361,19 +374,23 @@ class _M7LivelynessDetectionScreenAndroidState
       _onDetectionCompleted();
       return;
     }
-    _cameraState?.when(
-      onPhotoMode: (p0) => Future.delayed(
-        const Duration(milliseconds: 500),
-        () => p0.takePhoto().then(
-          (value) {
-            _onDetectionCompleted(
-              imgToReturn: value,
-              didCaptureAutomatically: didCaptureAutomatically,
-            );
-          },
-        ),
-      ),
+    _onDetectionCompleted(
+      imgToReturn: imgPath!,
+      didCaptureAutomatically: didCaptureAutomatically,
     );
+    // _cameraState?.when(
+    //   onPhotoMode: (p0) => Future.delayed(
+    //     const Duration(milliseconds: 500),
+    //     () => p0.takePhoto().then(
+    //       (value) {
+    //         _onDetectionCompleted(
+    //           imgToReturn: value,
+    //           didCaptureAutomatically: didCaptureAutomatically,
+    //         );
+    //       },
+    //     ),
+    //   ),
+    // );
   }
 
   void _onDetectionCompleted({
