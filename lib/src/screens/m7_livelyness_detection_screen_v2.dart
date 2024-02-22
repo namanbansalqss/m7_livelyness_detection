@@ -40,7 +40,6 @@ class _M7LivelynessDetectionScreenAndroidState
   //* MARK: - Private Variables
   //? =========================================================
   final _faceDetectionController = BehaviorSubject<FaceDetectionModel>();
-  String? imgPath;
 
   final options = FaceDetectorOptions(
     enableContours: true,
@@ -65,6 +64,7 @@ class _M7LivelynessDetectionScreenAndroidState
   Timer? _timerToDetectFace;
   bool _isCaptureButtonVisible = false;
   bool _isCompleted = false;
+  String? imgPath;
 
   //* MARK: - Life Cycle Methods
   //? =========================================================
@@ -146,6 +146,20 @@ class _M7LivelynessDetectionScreenAndroidState
       final List<Face> detectedFaces =
           await faceDetector.processImage(inputImage);
       print('facesV2 :- ${detectedFaces.length}');
+      if (detectedFaces.isNotEmpty && imgPath == null) {
+        _cameraState?.when(
+          onPhotoMode: (p0) => Future.delayed(
+            const Duration(milliseconds: 500),
+            () => p0.takePhoto().then(
+              (value) {
+                setState(() {
+                  imgPath = value;
+                });
+              },
+            ),
+          ),
+        );
+      }
 
       _faceDetectionController.add(
         FaceDetectionModel(
@@ -177,11 +191,6 @@ class _M7LivelynessDetectionScreenAndroidState
       if (faces.isEmpty) {
         _resetSteps();
         return;
-      }
-      if (imgPath == null) {
-        setState(() {
-          imgPath = img.filePath;
-        });
       }
       final Face firstFace = faces.first;
       final landmarks = firstFace.landmarks;
@@ -367,19 +376,15 @@ class _M7LivelynessDetectionScreenAndroidState
       _onDetectionCompleted();
       return;
     }
-    _onDetectionCompleted(
-      imgToReturn: imgPath!,
-      didCaptureAutomatically: didCaptureAutomatically,
-    );
     // _cameraState?.when(
     //   onPhotoMode: (p0) => Future.delayed(
     //     const Duration(milliseconds: 500),
     //     () => p0.takePhoto().then(
     //       (value) {
-    //         _onDetectionCompleted(
-    //           imgToReturn: value,
-    //           didCaptureAutomatically: didCaptureAutomatically,
-    //         );
+    _onDetectionCompleted(
+      imgToReturn: imgPath!,
+      didCaptureAutomatically: didCaptureAutomatically,
+    );
     //       },
     //     ),
     //   ),
