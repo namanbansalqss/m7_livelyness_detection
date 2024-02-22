@@ -178,18 +178,11 @@ class _M7LivelynessDetectionScreenAndroidState
         _resetSteps();
         return;
       }
-      _cameraState?.when(
-        onPhotoMode: (p0) => Future.delayed(
-          const Duration(milliseconds: 500),
-          () => p0.takePhoto().then(
-            (value) {
-              setState(() {
-                imgPath = value;
-              });
-            },
-          ),
-        ),
-      );
+      if (imgPath == null) {
+        setState(() {
+          imgPath = img.filePath;
+        });
+      }
       final Face firstFace = faces.first;
       final landmarks = firstFace.landmarks;
       // Get landmark positions for relevant facial features
