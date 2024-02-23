@@ -36,6 +36,7 @@ class _MLivelyness7DetectionScreenState
   bool _isTakingPicture = false;
   Timer? _timerToDetectFace;
   bool _isCaptureButtonVisible = false;
+  XFile? finalImage;
 
   late final List<M7LivelynessStepItem> _steps;
 
@@ -203,6 +204,12 @@ class _MLivelyness7DetectionScreenState
         _resetSteps();
       } else {
         final firstFace = faces.first;
+        final XFile? clickedImage = await _cameraController?.takePicture();
+        if (clickedImage != null) {
+          setState(() {
+            finalImage = clickedImage;
+          });
+        }
         final painter = M7FaceDetectorPainter(
           firstFace,
           inputImage.metadata!.size,
@@ -310,13 +317,8 @@ class _MLivelyness7DetectionScreenState
         () => _isTakingPicture = true,
       );
       await _cameraController?.stopImageStream();
-      final XFile? clickedImage = await _cameraController?.takePicture();
-      if (clickedImage == null) {
-        _startLiveFeed();
-        return;
-      }
       _onDetectionCompleted(
-        imgToReturn: clickedImage,
+        imgToReturn: finalImage,
         didCaptureAutomatically: didCaptureAutomatically,
       );
     } catch (e) {
