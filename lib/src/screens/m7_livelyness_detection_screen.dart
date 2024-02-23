@@ -204,11 +204,13 @@ class _MLivelyness7DetectionScreenState
         _resetSteps();
       } else {
         final firstFace = faces.first;
-        final XFile? clickedImage = await _cameraController?.takePicture();
-        if (clickedImage != null) {
-          setState(() {
-            finalImage = clickedImage;
-          });
+        if (finalImage == null) {
+          final XFile? clickedImage = await _cameraController?.takePicture();
+          if (clickedImage != null) {
+            setState(() {
+              finalImage = clickedImage;
+            });
+          }
         }
         final painter = M7FaceDetectorPainter(
           firstFace,
@@ -231,8 +233,8 @@ class _MLivelyness7DetectionScreenState
             _steps[_stepsKey.currentState?.currentIndex ?? 0].step ==
                 M7LivelynessStep.blink) {
           if (_didCloseEyes) {
-            if ((faces.first.leftEyeOpenProbability ?? 1.0) < 0.75 &&
-                (faces.first.rightEyeOpenProbability ?? 1.0) < 0.75) {
+            if ((faces.first.leftEyeOpenProbability ?? 1.0) < 0.5 &&
+                (faces.first.rightEyeOpenProbability ?? 1.0) < 0.5) {
               await _completeStep(
                 step: _steps[_stepsKey.currentState?.currentIndex ?? 0].step,
               );
