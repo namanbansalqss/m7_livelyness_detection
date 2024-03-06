@@ -151,7 +151,7 @@ class _MLivelyness7DetectionScreenState
       }
       _startTimer();
       _cameraController?.startImageStream(_processCameraImage);
-      _cameraController?.setFlashMode(FlashMode.off);
+      _cameraController?.setFlashMode(FlashMode.always);
       setState(() {});
     });
   }
