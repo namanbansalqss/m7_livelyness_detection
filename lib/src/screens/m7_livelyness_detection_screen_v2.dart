@@ -114,7 +114,8 @@ class _M7LivelynessDetectionScreenAndroidState
 
   Future<void> calculateSmileProgression() async {
     // print("smile progress length ${smileProgress.value.length}");
-    if (smileProgress.value.length >= 10) {
+    if (smileProgress.value.isNotEmpty &&
+        smileProgress.value.any((element) => element > 0.75)) {
       final smileFaces =
           smileProgress.value.where((element) => (element > 0.75)).length;
       final midSmileFaces = smileProgress.value
@@ -319,9 +320,10 @@ class _M7LivelynessDetectionScreenAndroidState
 
         if (face.smilingProbability != null) {
           smileProgress.value.add(face.smilingProbability!);
-          smileProgress.notifyListeners();
+          calculateSmileProgression();
+          // smileProgress.notifyListeners();
         }
-        _startProcessing();
+        // _startProcessing();
         // const double smileThreshold = 0.75;
 
         // if ((face.smilingProbability ?? 0) > (smileThreshold)) {
