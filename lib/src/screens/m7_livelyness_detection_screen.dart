@@ -38,6 +38,7 @@ class _MLivelyness7DetectionScreenState
   Timer? _timerToDetectFace;
   bool _isCaptureButtonVisible = false;
   XFile? finalImage;
+  bool successfulLoading = false;
 
   late final List<M7LivelynessStepItem> _steps;
 
@@ -339,12 +340,15 @@ class _MLivelyness7DetectionScreenState
       Navigator.of(context).pop(null);
       return;
     }
-    Navigator.of(context).pop(
-      M7CapturedImage(
-        imgPath: imgPath,
-        didCaptureAutomatically: didCaptureAutomatically,
-      ),
-    );
+    setState(() => successfulLoading = true);
+    Future.delayed(const Duration(milliseconds: 3000)).whenComplete(() {
+      Navigator.of(context).pop(
+        M7CapturedImage(
+          imgPath: imgPath,
+          didCaptureAutomatically: didCaptureAutomatically,
+        ),
+      );
+    });
   }
 
   void _resetSteps() async {
@@ -522,16 +526,16 @@ class _MLivelyness7DetectionScreenState
     return Stack(
       children: [
         Container(
-          height: MediaQuery.of(context).size.height,
-          width: MediaQuery.of(context).size.width,
+          height: size.height,
+          width: size.width,
           decoration: BoxDecoration(
             color: Colors.white.withOpacity(0.8),
           ),
         ),
         Center(
           child: SizedBox(
-            height: MediaQuery.of(context).size.height / 2.44,
-            width: MediaQuery.of(context).size.width / 1.92,
+            height: size.height / 2.44,
+            width: size.width / 1.92,
             child: ClipOval(
               child: cameraView,
             ),
@@ -577,6 +581,15 @@ class _MLivelyness7DetectionScreenState
               ),
               const Spacer(),
             ],
+          ),
+        ),
+        Visibility(
+          visible: successfulLoading,
+          child: const Align(
+            alignment: Alignment.center,
+            child: CircularProgressIndicator(
+              color: Color(0xff0475D7),
+            ),
           ),
         ),
       ],

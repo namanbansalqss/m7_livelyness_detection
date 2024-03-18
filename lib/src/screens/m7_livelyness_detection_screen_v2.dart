@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/cupertino.dart';
 import 'package:m7_livelyness_detection/index.dart';
 
 class M7LivelynessDetectionPageV2 extends StatelessWidget {
@@ -60,6 +61,7 @@ class _M7LivelynessDetectionScreenAndroidState
 
   CameraState? _cameraState;
   bool _isProcessing = false;
+  bool successfulLoading = false;
   late bool _isInfoStepCompleted;
   Timer? _timerToDetectFace;
   bool _isCaptureButtonVisible = false;
@@ -408,12 +410,15 @@ class _M7LivelynessDetectionScreenAndroidState
       Navigator.of(context).pop(null);
       return;
     }
-    Navigator.of(context).pop(
-      M7CapturedImage(
-        imgPath: imgPath,
-        didCaptureAutomatically: didCaptureAutomatically,
-      ),
-    );
+    setState(() => successfulLoading = true);
+    Future.delayed(const Duration(milliseconds: 3000)).whenComplete(() {
+      Navigator.of(context).pop(
+        M7CapturedImage(
+          imgPath: imgPath,
+          didCaptureAutomatically: didCaptureAutomatically,
+        ),
+      );
+    });
   }
 
   void _resetSteps() async {
@@ -564,6 +569,15 @@ class _M7LivelynessDetectionScreenAndroidState
                   color: Colors.white,
                 ),
               ),
+            ),
+          ),
+        ),
+        Visibility(
+          visible: successfulLoading,
+          child: const Align(
+            alignment: Alignment.center,
+            child: CircularProgressIndicator(
+              color: Color(0xff0475D7),
             ),
           ),
         ),
