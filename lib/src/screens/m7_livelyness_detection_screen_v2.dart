@@ -452,8 +452,10 @@ class _M7LivelynessDetectionScreenAndroidState
             : const SizedBox(),
         _isInfoStepCompleted
             ? SizedBox(
-                height: 350,
-                width: 200,
+                // height: 350,
+                height: MediaQuery.of(context).size.height / 2.44,
+                width: MediaQuery.of(context).size.width / 1.92,
+                // width: 200,
                 child: ClipOval(
                   child: CameraAwesomeBuilder.custom(
                     flashMode: FlashMode.auto,
