@@ -534,8 +534,8 @@ class _MLivelyness7DetectionScreenState
         ),
         Center(
           child: SizedBox(
-            height: size.height / 2.44,
-            width: size.width / 1.92,
+            height: size.width > 600 ? size.height / 1.8 : size.height / 2.44,
+            width: size.width > 600 ? size.width / 2.2 : size.width / 1.92,
             child: ClipOval(
               child: cameraView,
             ),

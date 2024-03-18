@@ -443,13 +443,14 @@ class _M7LivelynessDetectionScreenAndroidState
   //? =========================================================
   @override
   Widget build(BuildContext context) {
+    final size = MediaQuery.of(context).size;
     return Stack(
       alignment: Alignment.center,
       children: [
         _isInfoStepCompleted
             ? Container(
-                height: MediaQuery.of(context).size.height,
-                width: MediaQuery.of(context).size.width,
+                height: size.height,
+                width: size.width,
                 decoration: BoxDecoration(
                   color: Colors.white.withOpacity(0.8),
                 ),
@@ -458,8 +459,9 @@ class _M7LivelynessDetectionScreenAndroidState
         _isInfoStepCompleted
             ? SizedBox(
                 // height: 350,
-                height: MediaQuery.of(context).size.height / 2.44,
-                width: MediaQuery.of(context).size.width / 1.92,
+                height:
+                    size.width > 600 ? size.height / 1.8 : size.height / 2.44,
+                width: size.width > 600 ? size.width / 2.2 : size.width / 1.92,
                 // width: 200,
                 child: ClipOval(
                   child: CameraAwesomeBuilder.custom(
