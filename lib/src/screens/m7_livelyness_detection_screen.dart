@@ -208,11 +208,43 @@ class _MLivelyness7DetectionScreenState
       } else {
         final firstFace = faces.first;
         if (finalImage == null) {
-          final XFile? clickedImage = await _cameraController?.takePicture();
-          if (clickedImage != null) {
-            setState(() {
-              finalImage = clickedImage;
-            });
+          final imageWidth = inputImage.metadata!.size.width;
+          final imageHeight = inputImage.metadata!.size.height;
+          bool isCenteredHorizontally = (firstFace.boundingBox.left +
+                          firstFace.boundingBox.width / 2) /
+                      imageWidth >=
+                  0.45 &&
+              (firstFace.boundingBox.left + firstFace.boundingBox.width / 2) /
+                      imageWidth <=
+                  0.55;
+          bool isCenteredVertically = (firstFace.boundingBox.top +
+                          firstFace.boundingBox.height / 2) /
+                      imageHeight >=
+                  0.45 &&
+              (firstFace.boundingBox.top + firstFace.boundingBox.height / 2) /
+                      imageHeight <=
+                  0.55;
+          if (firstFace.headEulerAngleY != null &&
+              firstFace.headEulerAngleZ != null) {
+            // Check if face is facing front and not tilted significantly
+            bool isUpright = firstFace.headEulerAngleY!.abs() < 10 &&
+                firstFace.headEulerAngleZ!.abs() < 10;
+            // Check if face occupies a reasonable portion of the frame
+            bool isReasonableSize =
+                firstFace.boundingBox.width > imageWidth * 0.1 &&
+                    firstFace.boundingBox.height > imageHeight * 0.1;
+            if (isCenteredHorizontally &&
+                isCenteredVertically &&
+                isUpright &&
+                isReasonableSize) {
+              final XFile? clickedImage =
+                  await _cameraController?.takePicture();
+              if (clickedImage != null) {
+                setState(() {
+                  finalImage = clickedImage;
+                });
+              }
+            }
           }
         }
         final painter = M7FaceDetectorPainter(

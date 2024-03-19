@@ -150,18 +150,47 @@ class _M7LivelynessDetectionScreenAndroidState
           await faceDetector.processImage(inputImage);
       print('facesV2 :- ${detectedFaces.length}');
       if (detectedFaces.isNotEmpty && imgPath == null) {
-        _cameraState?.when(
-          onPhotoMode: (p0) => Future.delayed(
-            const Duration(milliseconds: 500),
-            () => p0.takePhoto().then(
-              (value) {
-                setState(() {
-                  imgPath = value;
-                });
-              },
-            ),
-          ),
-        );
+        final face = detectedFaces.first;
+        final imageWidth = img.width;
+        final imageHeight = img.height;
+        bool isCenteredHorizontally =
+            (face.boundingBox.left + face.boundingBox.width / 2) / imageWidth >=
+                    0.45 &&
+                (face.boundingBox.left + face.boundingBox.width / 2) /
+                        imageWidth <=
+                    0.55;
+        bool isCenteredVertically =
+            (face.boundingBox.top + face.boundingBox.height / 2) /
+                        imageHeight >=
+                    0.45 &&
+                (face.boundingBox.top + face.boundingBox.height / 2) /
+                        imageHeight <=
+                    0.55;
+        if (face.headEulerAngleY != null && face.headEulerAngleZ != null) {
+          // Check if face is facing front and not tilted significantly
+          bool isUpright = face.headEulerAngleY!.abs() < 10 &&
+              face.headEulerAngleZ!.abs() < 10;
+          // Check if face occupies a reasonable portion of the frame
+          bool isReasonableSize = face.boundingBox.width > imageWidth * 0.1 &&
+              face.boundingBox.height > imageHeight * 0.1;
+          if (isCenteredHorizontally &&
+              isCenteredVertically &&
+              isUpright &&
+              isReasonableSize) {
+            _cameraState?.when(
+              onPhotoMode: (p0) => Future.delayed(
+                const Duration(milliseconds: 500),
+                () => p0.takePhoto().then(
+                  (value) {
+                    setState(() {
+                      imgPath = value;
+                    });
+                  },
+                ),
+              ),
+            );
+          }
+        }
       }
 
       _faceDetectionController.add(
@@ -385,10 +414,12 @@ class _M7LivelynessDetectionScreenAndroidState
     //     const Duration(milliseconds: 500),
     //     () => p0.takePhoto().then(
     //       (value) {
-    _onDetectionCompleted(
-      imgToReturn: imgPath!,
-      didCaptureAutomatically: didCaptureAutomatically,
-    );
+    if (imgPath != null) {
+      _onDetectionCompleted(
+        imgToReturn: imgPath!,
+        didCaptureAutomatically: didCaptureAutomatically,
+      );
+    }
     //       },
     //     ),
     //   ),
