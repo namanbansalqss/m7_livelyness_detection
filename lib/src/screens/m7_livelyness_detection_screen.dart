@@ -554,25 +554,34 @@ class _MLivelyness7DetectionScreenState
     final size = MediaQuery.of(context).size;
     var scale = size.aspectRatio * _cameraController!.value.aspectRatio;
     if (scale < 1) scale = 1 / scale;
-    final Widget cameraView = CameraPreview(_cameraController!);
+    final Widget cameraView = CameraPreview(_cameraController!,);
     return Stack(
       children: [
-        Container(
-          height: size.height,
-          width: size.width,
-          decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.8),
-          ),
-        ),
-        Center(
-          child: SizedBox(
-            height: size.width > 600 ? size.height / 1.8 : size.height / 2.44,
-            width: size.width > 600 ? size.width / 2.2 : size.width / 1.92,
-            child: ClipOval(
-              child: cameraView,
+        // Container(
+        //   height: size.height,
+        //   width: size.width,
+        //   decoration: BoxDecoration(
+        //     color: Colors.white.withOpacity(0.8),
+        //   ),
+        // ),
+        // Center(
+        //   child: SizedBox(
+        //     height: size.width > 600 ? size.height / 1.8 : size.height / 2.44,
+        //     width: size.width > 600 ? size.width / 2.2 : size.width / 1.92,
+        //     child: ClipOval(
+        //       child: cameraView,
+        //     ),
+        //   ),
+        // ),
+        Center(child:cameraView),
+        new Center(child: IgnorePointer(
+          child: new ClipPath(
+            clipper: new InvertedCircleClipper(),
+            child: new Container(
+              color:  Colors.white,
             ),
           ),
-        ),
+        ),),
         if (_customPaint != null) _customPaint!,
         M7LivelynessDetectionStepOverlay(
           key: _stepsKey,
@@ -664,4 +673,26 @@ extension M7FaceExt on Face {
         return contours[FaceContourType.rightCheek];
     }
   }
+}
+class InvertedCircleClipper extends CustomClipper<Path> {
+  @override
+  Path getClip(Size size) {
+    return new Path()
+      // ..addOval(
+      //     new Rect.fromCircle(
+      //     center: new Offset(size.width / 2, size.height / 2),
+      //     radius: size.width * 0.45)
+      // )
+      // ..addRect(new Rect.fromLTWH(0.0, 0.0, size.width, size.height))
+      ..addOval(Rect.fromCenter(
+          center: Offset(size.width / 2, size.height / 2),
+          width: size.width *(size.width>600? 0.5:0.6), // Adjust width for oval shape
+          height: size.height * 0.55)) // Adjust height for oval shape
+      ..addRect(new Rect.fromLTWH(0.0, 0.0, size.width, size.height))
+      ..fillType = PathFillType.evenOdd;
+
+  }
+
+  @override
+  bool shouldReclip(CustomClipper<Path> oldClipper) => false;
 }
