@@ -1,6 +1,6 @@
 import 'dart:async';
 import 'dart:ui' as ui;
-
+import 'package:flutter/services.dart';
 import 'package:camera/camera.dart';
 import 'package:collection/collection.dart';
 import 'package:m7_livelyness_detection/index.dart' hide FlashMode;
@@ -153,6 +153,7 @@ class _MLivelyness7DetectionScreenState
       _startTimer();
       _cameraController?.startImageStream(_processCameraImage);
       _cameraController?.setFlashMode(FlashMode.always);
+      _cameraController?.lockCaptureOrientation(DeviceOrientation.portraitUp);
       setState(() {});
     });
   }
