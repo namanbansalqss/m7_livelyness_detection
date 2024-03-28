@@ -478,58 +478,110 @@ class _M7LivelynessDetectionScreenAndroidState
     return Stack(
       alignment: Alignment.center,
       children: [
+        // _isInfoStepCompleted
+        //     ? Container(
+        //         height: size.height,
+        //         width: size.width,
+        //         decoration: BoxDecoration(
+        //           color: Colors.white.withOpacity(0.8),
+        //         ),
+        //       )
+        //     : const SizedBox(),
+        // _isInfoStepCompleted
+        //     ? SizedBox(
+        //         // height: 350,
+        //         height:
+        //             size.width > 600 ? size.height / 1.8 : size.height / 2.44,
+        //         width: size.width > 600 ? size.width / 2.2 : size.width / 1.92,
+        //         // width: 200,
+        //         child: ClipOval(
+        //           child: CameraAwesomeBuilder.custom(
+        //             flashMode: FlashMode.auto,
+        //             previewFit: CameraPreviewFit.cover,
+        //             sensor: Sensors.front,
+        //             onImageForAnalysis: (img) => _processCameraImage(img),
+        //             imageAnalysisConfig: AnalysisConfig(
+        //               autoStart: true,
+        //               androidOptions: const AndroidAnalysisOptions.nv21(
+        //                 width: 250,
+        //               ),
+        //               maxFramesPerSecond: 30,
+        //             ),
+        //             builder: (state, previewSize, previewRect) {
+        //               _cameraState = state;
+        //               return M7PreviewDecoratorWidget(
+        //                 cameraState: state,
+        //                 faceDetectionStream: _faceDetectionController,
+        //                 previewSize: previewSize,
+        //                 previewRect: previewRect,
+        //                 detectionColor:
+        //                     _steps[_stepsKey.currentState?.currentIndex ?? 0]
+        //                         .detectionColor,
+        //               );
+        //             },
+        //             saveConfig: SaveConfig.photo(
+        //               pathBuilder: () async {
+        //                 final String fileName = "${M7Utils.generate()}.jpg";
+        //                 final String path = await getTemporaryDirectory().then(
+        //                   (value) => value.path,
+        //                 );
+        //                 return "$path/$fileName";
+        //               },
+        //             ),
+        //           ),
+        //         ),
+        //       )
         _isInfoStepCompleted
-            ? Container(
-                height: size.height,
-                width: size.width,
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.8),
-                ),
-              )
-            : const SizedBox(),
-        _isInfoStepCompleted
-            ? SizedBox(
-                // height: 350,
-                height:
-                    size.width > 600 ? size.height / 1.8 : size.height / 2.44,
-                width: size.width > 600 ? size.width / 2.2 : size.width / 1.92,
-                // width: 200,
-                child: ClipOval(
-                  child: CameraAwesomeBuilder.custom(
-                    flashMode: FlashMode.auto,
-                    previewFit: CameraPreviewFit.cover,
-                    sensor: Sensors.front,
-                    onImageForAnalysis: (img) => _processCameraImage(img),
-                    imageAnalysisConfig: AnalysisConfig(
-                      autoStart: true,
-                      androidOptions: const AndroidAnalysisOptions.nv21(
-                        width: 250,
+            ? Stack(
+                children: [
+                  Center(
+                    child: CameraAwesomeBuilder.custom(
+                      flashMode: FlashMode.auto,
+                      previewFit: CameraPreviewFit.cover,
+                      sensor: Sensors.front,
+                      onImageForAnalysis: (img) => _processCameraImage(img),
+                      imageAnalysisConfig: AnalysisConfig(
+                        autoStart: true,
+                        androidOptions: const AndroidAnalysisOptions.nv21(
+                          width: 250,
+                        ),
+                        maxFramesPerSecond: 30,
                       ),
-                      maxFramesPerSecond: 30,
-                    ),
-                    builder: (state, previewSize, previewRect) {
-                      _cameraState = state;
-                      return M7PreviewDecoratorWidget(
-                        cameraState: state,
-                        faceDetectionStream: _faceDetectionController,
-                        previewSize: previewSize,
-                        previewRect: previewRect,
-                        detectionColor:
-                            _steps[_stepsKey.currentState?.currentIndex ?? 0]
-                                .detectionColor,
-                      );
-                    },
-                    saveConfig: SaveConfig.photo(
-                      pathBuilder: () async {
-                        final String fileName = "${M7Utils.generate()}.jpg";
-                        final String path = await getTemporaryDirectory().then(
-                          (value) => value.path,
+                      builder: (state, previewSize, previewRect) {
+                        _cameraState = state;
+                        return M7PreviewDecoratorWidget(
+                          cameraState: state,
+                          faceDetectionStream: _faceDetectionController,
+                          previewSize: previewSize,
+                          previewRect: previewRect,
+                          detectionColor:
+                              _steps[_stepsKey.currentState?.currentIndex ?? 0]
+                                  .detectionColor,
                         );
-                        return "$path/$fileName";
                       },
+                      saveConfig: SaveConfig.photo(
+                        pathBuilder: () async {
+                          final String fileName = "${M7Utils.generate()}.jpg";
+                          final String path =
+                              await getTemporaryDirectory().then(
+                            (value) => value.path,
+                          );
+                          return "$path/$fileName";
+                        },
+                      ),
                     ),
                   ),
-                ),
+                  Center(
+                    child: IgnorePointer(
+                      child: ClipPath(
+                        clipper: InvertedCircleClipper(),
+                        child: Container(
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               )
             : M7LivelynessInfoWidget(
                 onStartTap: () {
