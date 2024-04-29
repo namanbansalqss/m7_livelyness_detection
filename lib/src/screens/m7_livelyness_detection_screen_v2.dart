@@ -571,16 +571,16 @@ class _M7LivelynessDetectionScreenAndroidState
                       ),
                     ),
                   ),
-                  // Center(
-                  //   child: IgnorePointer(
-                  //     child: ClipPath(
-                  //       clipper: InvertedCircleClipper(),
-                  //       child: Container(
-                  //         color: Colors.white,
-                  //       ),
-                  //     ),
-                  //   ),
-                  // ),
+                  Center(
+                    child: IgnorePointer(
+                      child: ClipPath(
+                        clipper: InvertedCircleClipper(),
+                        child: Container(
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ),
                 ],
               )
             : M7LivelynessInfoWidget(
