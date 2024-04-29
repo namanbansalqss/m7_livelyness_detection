@@ -647,7 +647,7 @@ class _M7LivelynessDetectionScreenAndroidState
           child: const Align(
             alignment: Alignment.center,
             child: CircularProgressIndicator(
-              color: Color(0xff0475D7),
+              color: Color(0xffFA9C0B),
             ),
           ),
         ),
