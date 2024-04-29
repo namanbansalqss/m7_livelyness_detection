@@ -226,6 +226,7 @@ class _MLivelyness7DetectionScreenState
         _detect(
           face: faces.first,
           step: _steps[_stepsKey.currentState?.currentIndex ?? 0].step,
+          inputImage: inputImage,
         );
       }
     } else {
