@@ -66,10 +66,8 @@ class _MLivelyness7DetectionScreenState
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body:
-      SafeArea(
-        child:
-        _buildBody(),
+      body: SafeArea(
+        child: _buildBody(),
       ),
     );
   }
@@ -155,8 +153,9 @@ class _MLivelyness7DetectionScreenState
       _startTimer();
       _cameraController?.startImageStream(_processCameraImage);
       _cameraController?.setFlashMode(FlashMode.always);
-      if(MediaQuery.of(context).size.width<600)
-      _cameraController?.lockCaptureOrientation(DeviceOrientation.portraitUp);
+      if (MediaQuery.of(context).size.width < 600) {
+        _cameraController?.lockCaptureOrientation(DeviceOrientation.portraitUp);
+      }
       setState(() {});
     });
   }
@@ -496,8 +495,9 @@ class _MLivelyness7DetectionScreenState
 
         if (face.smilingProbability != null) {
           smileProgress.value.add(face.smilingProbability!);
+          calculateSmileProgression();
         }
-        _startProcessing();
+        // _startProcessing();
 
         break;
     }
@@ -507,7 +507,6 @@ class _MLivelyness7DetectionScreenState
   //? =========================================================
   Widget _buildBody() {
     return Stack(
-
       children: [
         _isInfoStepCompleted
             ? _buildDetectionBody()
@@ -558,42 +557,48 @@ class _MLivelyness7DetectionScreenState
     }
     final size = MediaQuery.of(context).size;
     final deviceRatio = size.width / size.height;
-    var scale =  _cameraController!.value.aspectRatio/size.aspectRatio;
-     if(scale<1)scale = 1 / scale;
+    var scale = _cameraController!.value.aspectRatio / size.aspectRatio;
+    if (scale < 1) scale = 1 / scale;
     // print(scale);
-    final orientation =MediaQuery.of(context).orientation == Orientation.portrait;
+    final orientation =
+        MediaQuery.of(context).orientation == Orientation.portrait;
     return Stack(
       fit: StackFit.expand,
       children: [
-        size.width>600?
-        !orientation?Transform.scale(
-          scale: _cameraController!.value.aspectRatio / size.aspectRatio,
-          child: Center(
-            child: AspectRatio(
-              aspectRatio: _cameraController!.value.aspectRatio,
-              child: CameraPreview(_cameraController!),
-            ),
-          ),
-        ):
-        Center(child:
-        Transform.scale(
-              scale : 1.0,
-              child:
-               AspectRatio(
-                      aspectRatio: size.aspectRatio ,
-                      child:Column(children: [Expanded(child:CameraPreview(
-                        _cameraController!,
-                      ))],)
+        size.width > 600
+            ? !orientation
+                ? Transform.scale(
+                    scale:
+                        _cameraController!.value.aspectRatio / size.aspectRatio,
+                    child: Center(
+                      child: AspectRatio(
+                        aspectRatio: _cameraController!.value.aspectRatio,
+                        child: CameraPreview(_cameraController!),
+                      ),
+                    ),
                   )
-        )
-
-        ):Center(child: CameraPreview(_cameraController!),),
-
-
+                : Center(
+                    child: Transform.scale(
+                        scale: 1.0,
+                        child: AspectRatio(
+                            aspectRatio: size.aspectRatio,
+                            child: Column(
+                              children: [
+                                Expanded(
+                                    child: CameraPreview(
+                                  _cameraController!,
+                                ))
+                              ],
+                            ))))
+            : Center(
+                child: CameraPreview(_cameraController!),
+              ),
         Center(
           child: IgnorePointer(
             child: ClipPath(
-              clipper:orientation? InvertedCircleClipper():InvertedCircleClipperlandscape(),
+              clipper: orientation
+                  ? InvertedCircleClipper()
+                  : InvertedCircleClipperlandscape(),
               child: Container(
                 color: Colors.white,
               ),
@@ -697,7 +702,7 @@ class InvertedCircleClipperlandscape extends CustomClipper<Path> {
   @override
   Path getClip(Size size) {
     final aspectRatio = size.width / size.height;
-    final ovalWidth =size.height * 0.4;
+    final ovalWidth = size.height * 0.4;
     final ovalHeight = size.height * 0.65;
 
     return Path()
@@ -712,7 +717,6 @@ class InvertedCircleClipperlandscape extends CustomClipper<Path> {
   @override
   bool shouldReclip(CustomClipper<Path> oldClipper) => false;
 }
-
 
 class InvertedCircleClipper extends CustomClipper<Path> {
   @override
