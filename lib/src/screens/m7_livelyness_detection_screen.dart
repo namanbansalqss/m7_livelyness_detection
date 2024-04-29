@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:ui' as ui;
 import 'package:flutter/services.dart';
 import 'package:camera/camera.dart';
 import 'package:collection/collection.dart';
@@ -66,10 +65,8 @@ class _MLivelyness7DetectionScreenState
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body:
-      SafeArea(
-        child:
-        _buildBody(),
+      body: SafeArea(
+        child: _buildBody(),
       ),
     );
   }
@@ -127,22 +124,6 @@ class _MLivelyness7DetectionScreenState
 
   void _startLiveFeed() async {
     final camera = availableCams[_cameraIndex];
-    // _cameraController = CameraController(
-    //   camera,
-    //   ResolutionPreset.high,
-    //   imageFormatGroup: ImageFormatGroup.jpeg,
-    //   enableAudio: false,
-    // );
-    // _cameraController?.initialize().then((_) {
-    //   if (!mounted) {
-    //     return;
-    //   }
-    //   _cameraController?.startImageStream(_processCameraImage);
-    //   if (mounted) {
-    //     _startTimer();
-    //     setState(() {});
-    //   }
-    // });
     _cameraController = CameraController(
       camera,
       ResolutionPreset.high,
@@ -155,8 +136,9 @@ class _MLivelyness7DetectionScreenState
       _startTimer();
       _cameraController?.startImageStream(_processCameraImage);
       _cameraController?.setFlashMode(FlashMode.always);
-      if(MediaQuery.of(context).size.width<600)
-      _cameraController?.lockCaptureOrientation(DeviceOrientation.portraitUp);
+      if (MediaQuery.of(context).size.width < 600) {
+        _cameraController?.lockCaptureOrientation(DeviceOrientation.portraitUp);
+      }
       setState(() {});
     });
   }
@@ -211,46 +193,6 @@ class _MLivelyness7DetectionScreenState
         _resetSteps();
       } else {
         final firstFace = faces.first;
-        if (finalImage == null) {
-          final imageWidth = inputImage.metadata!.size.width;
-          final imageHeight = inputImage.metadata!.size.height;
-          bool isCenteredHorizontally = (firstFace.boundingBox.left +
-                          firstFace.boundingBox.width / 2) /
-                      imageWidth >=
-                  0.45 &&
-              (firstFace.boundingBox.left + firstFace.boundingBox.width / 2) /
-                      imageWidth <=
-                  0.55;
-          bool isCenteredVertically = (firstFace.boundingBox.top +
-                          firstFace.boundingBox.height / 2) /
-                      imageHeight >=
-                  0.45 &&
-              (firstFace.boundingBox.top + firstFace.boundingBox.height / 2) /
-                      imageHeight <=
-                  0.55;
-          if (firstFace.headEulerAngleY != null &&
-              firstFace.headEulerAngleZ != null) {
-            // Check if face is facing front and not tilted significantly
-            bool isUpright = firstFace.headEulerAngleY!.abs() < 10 &&
-                firstFace.headEulerAngleZ!.abs() < 10;
-            // Check if face occupies a reasonable portion of the frame
-            bool isReasonableSize =
-                firstFace.boundingBox.width > imageWidth * 0.1 &&
-                    firstFace.boundingBox.height > imageHeight * 0.1;
-            if (isCenteredHorizontally &&
-                isCenteredVertically &&
-                isUpright &&
-                isReasonableSize) {
-              final XFile? clickedImage =
-                  await _cameraController?.takePicture();
-              if (clickedImage != null) {
-                setState(() {
-                  finalImage = clickedImage;
-                });
-              }
-            }
-          }
-        }
         final painter = M7FaceDetectorPainter(
           firstFace,
           inputImage.metadata!.size,
@@ -284,6 +226,7 @@ class _MLivelyness7DetectionScreenState
         _detect(
           face: faces.first,
           step: _steps[_stepsKey.currentState?.currentIndex ?? 0].step,
+          inputImage: inputImage,
         );
       }
     } else {
@@ -427,6 +370,7 @@ class _MLivelyness7DetectionScreenState
   void _detect({
     required Face face,
     required M7LivelynessStep step,
+    required InputImage inputImage,
   }) async {
     if (_isProcessingStep) {
       return;
@@ -500,6 +444,44 @@ class _MLivelyness7DetectionScreenState
         _startProcessing();
 
         break;
+      case M7LivelynessStep.holdStill:
+        final imageWidth = inputImage.metadata!.size.width;
+        final imageHeight = inputImage.metadata!.size.height;
+        bool isCenteredHorizontally =
+            (face.boundingBox.left + face.boundingBox.width / 2) / imageWidth >=
+                    0.45 &&
+                (face.boundingBox.left + face.boundingBox.width / 2) /
+                        imageWidth <=
+                    0.55;
+        bool isCenteredVertically =
+            (face.boundingBox.top + face.boundingBox.height / 2) /
+                        imageHeight >=
+                    0.45 &&
+                (face.boundingBox.top + face.boundingBox.height / 2) /
+                        imageHeight <=
+                    0.55;
+        if (face.headEulerAngleY != null && face.headEulerAngleZ != null) {
+          // Check if face is facing front and not tilted significantly
+          bool isUpright = face.headEulerAngleY!.abs() < 10 &&
+              face.headEulerAngleZ!.abs() < 10;
+          // Check if face occupies a reasonable portion of the frame
+          bool isReasonableSize = face.boundingBox.width > imageWidth * 0.1 &&
+              face.boundingBox.height > imageHeight * 0.1;
+          if (isCenteredHorizontally &&
+              isCenteredVertically &&
+              isUpright &&
+              isReasonableSize) {
+            final XFile? clickedImage = await _cameraController?.takePicture();
+            if (clickedImage != null) {
+              setState(() {
+                finalImage = clickedImage;
+              });
+              _startProcessing();
+              await _completeStep(step: step);
+            }
+          }
+        }
+        break;
     }
   }
 
@@ -507,7 +489,6 @@ class _MLivelyness7DetectionScreenState
   //? =========================================================
   Widget _buildBody() {
     return Stack(
-
       children: [
         _isInfoStepCompleted
             ? _buildDetectionBody()
@@ -557,43 +538,48 @@ class _MLivelyness7DetectionScreenState
       );
     }
     final size = MediaQuery.of(context).size;
-    final deviceRatio = size.width / size.height;
-    var scale =  _cameraController!.value.aspectRatio/size.aspectRatio;
-     if(scale<1)scale = 1 / scale;
+    var scale = _cameraController!.value.aspectRatio / size.aspectRatio;
+    if (scale < 1) scale = 1 / scale;
     // print(scale);
-    final orientation =MediaQuery.of(context).orientation == Orientation.portrait;
+    final orientation =
+        MediaQuery.of(context).orientation == Orientation.portrait;
     return Stack(
       fit: StackFit.expand,
       children: [
-        size.width>600?
-        !orientation?Transform.scale(
-          scale: _cameraController!.value.aspectRatio / size.aspectRatio,
-          child: Center(
-            child: AspectRatio(
-              aspectRatio: _cameraController!.value.aspectRatio,
-              child: CameraPreview(_cameraController!),
-            ),
-          ),
-        ):
-        Center(child:
-        Transform.scale(
-              scale : 1.0,
-              child:
-               AspectRatio(
-                      aspectRatio: size.aspectRatio ,
-                      child:Column(children: [Expanded(child:CameraPreview(
-                        _cameraController!,
-                      ))],)
+        size.width > 600
+            ? !orientation
+                ? Transform.scale(
+                    scale:
+                        _cameraController!.value.aspectRatio / size.aspectRatio,
+                    child: Center(
+                      child: AspectRatio(
+                        aspectRatio: _cameraController!.value.aspectRatio,
+                        child: CameraPreview(_cameraController!),
+                      ),
+                    ),
                   )
-        )
-
-        ):Center(child: CameraPreview(_cameraController!),),
-
-
+                : Center(
+                    child: Transform.scale(
+                        scale: 1.0,
+                        child: AspectRatio(
+                            aspectRatio: size.aspectRatio,
+                            child: Column(
+                              children: [
+                                Expanded(
+                                    child: CameraPreview(
+                                  _cameraController!,
+                                ))
+                              ],
+                            ))))
+            : Center(
+                child: CameraPreview(_cameraController!),
+              ),
         Center(
           child: IgnorePointer(
             child: ClipPath(
-              clipper:orientation? InvertedCircleClipper():InvertedCircleClipperlandscape(),
+              clipper: orientation
+                  ? InvertedCircleClipper()
+                  : InvertedCircleClipperlandscape(),
               child: Container(
                 color: Colors.white,
               ),
@@ -647,7 +633,7 @@ class _MLivelyness7DetectionScreenState
           child: const Align(
             alignment: Alignment.center,
             child: CircularProgressIndicator(
-              color: Color(0xff0475D7),
+              color: Color(0xffFA9C0B),
             ),
           ),
         ),
@@ -696,8 +682,7 @@ extension M7FaceExt on Face {
 class InvertedCircleClipperlandscape extends CustomClipper<Path> {
   @override
   Path getClip(Size size) {
-    final aspectRatio = size.width / size.height;
-    final ovalWidth =size.height * 0.4;
+    final ovalWidth = size.height * 0.4;
     final ovalHeight = size.height * 0.65;
 
     return Path()
@@ -713,17 +698,16 @@ class InvertedCircleClipperlandscape extends CustomClipper<Path> {
   bool shouldReclip(CustomClipper<Path> oldClipper) => false;
 }
 
-
 class InvertedCircleClipper extends CustomClipper<Path> {
   @override
   Path getClip(Size size) {
-    return new Path()
+    return Path()
       ..addOval(Rect.fromCenter(
           center: Offset(size.width / 2, size.height / 2),
           width: size.width * (size.width > 600 ? 0.5 : 0.6),
           // Adjust width for oval shape
           height: size.height * 0.55)) // Adjust height for oval shape
-      ..addRect(new Rect.fromLTWH(0.0, 0.0, size.width, size.height))
+      ..addRect(Rect.fromLTWH(0.0, 0.0, size.width, size.height))
       ..fillType = PathFillType.evenOdd;
   }
 

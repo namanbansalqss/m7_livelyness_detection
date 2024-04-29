@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:flutter/cupertino.dart';
 import 'package:m7_livelyness_detection/index.dart';
 
 class M7LivelynessDetectionPageV2 extends StatelessWidget {
@@ -149,49 +148,49 @@ class _M7LivelynessDetectionScreenAndroidState
       final List<Face> detectedFaces =
           await faceDetector.processImage(inputImage);
       print('facesV2 :- ${detectedFaces.length}');
-      if (detectedFaces.isNotEmpty && imgPath == null) {
-        final face = detectedFaces.first;
-        final imageWidth = img.width;
-        final imageHeight = img.height;
-        bool isCenteredHorizontally =
-            (face.boundingBox.left + face.boundingBox.width / 2) / imageWidth >=
-                    0.45 &&
-                (face.boundingBox.left + face.boundingBox.width / 2) /
-                        imageWidth <=
-                    0.55;
-        bool isCenteredVertically =
-            (face.boundingBox.top + face.boundingBox.height / 2) /
-                        imageHeight >=
-                    0.45 &&
-                (face.boundingBox.top + face.boundingBox.height / 2) /
-                        imageHeight <=
-                    0.55;
-        if (face.headEulerAngleY != null && face.headEulerAngleZ != null) {
-          // Check if face is facing front and not tilted significantly
-          bool isUpright = face.headEulerAngleY!.abs() < 10 &&
-              face.headEulerAngleZ!.abs() < 10;
-          // Check if face occupies a reasonable portion of the frame
-          bool isReasonableSize = face.boundingBox.width > imageWidth * 0.1 &&
-              face.boundingBox.height > imageHeight * 0.1;
-          if (isCenteredHorizontally &&
-              isCenteredVertically &&
-              isUpright &&
-              isReasonableSize) {
-            _cameraState?.when(
-              onPhotoMode: (p0) => Future.delayed(
-                const Duration(milliseconds: 500),
-                () => p0.takePhoto().then(
-                  (value) {
-                    setState(() {
-                      imgPath = value;
-                    });
-                  },
-                ),
-              ),
-            );
-          }
-        }
-      }
+      // if (detectedFaces.isNotEmpty && imgPath == null) {
+      //   final face = detectedFaces.first;
+      //   final imageWidth = img.width;
+      //   final imageHeight = img.height;
+      //   bool isCenteredHorizontally =
+      //       (face.boundingBox.left + face.boundingBox.width / 2) / imageWidth >=
+      //               0.45 &&
+      //           (face.boundingBox.left + face.boundingBox.width / 2) /
+      //                   imageWidth <=
+      //               0.55;
+      //   bool isCenteredVertically =
+      //       (face.boundingBox.top + face.boundingBox.height / 2) /
+      //                   imageHeight >=
+      //               0.45 &&
+      //           (face.boundingBox.top + face.boundingBox.height / 2) /
+      //                   imageHeight <=
+      //               0.55;
+      //   if (face.headEulerAngleY != null && face.headEulerAngleZ != null) {
+      //     // Check if face is facing front and not tilted significantly
+      //     bool isUpright = face.headEulerAngleY!.abs() < 10 &&
+      //         face.headEulerAngleZ!.abs() < 10;
+      //     // Check if face occupies a reasonable portion of the frame
+      //     bool isReasonableSize = face.boundingBox.width > imageWidth * 0.1 &&
+      //         face.boundingBox.height > imageHeight * 0.1;
+      //     if (isCenteredHorizontally &&
+      //         isCenteredVertically &&
+      //         isUpright &&
+      //         isReasonableSize) {
+      //       _cameraState?.when(
+      //         onPhotoMode: (p0) => Future.delayed(
+      //           const Duration(milliseconds: 500),
+      //           () => p0.takePhoto().then(
+      //             (value) {
+      //               setState(() {
+      //                 imgPath = value;
+      //               });
+      //             },
+      //           ),
+      //         ),
+      //       );
+      //     }
+      //   }
+      // }
 
       _faceDetectionController.add(
         FaceDetectionModel(
@@ -202,7 +201,7 @@ class _M7LivelynessDetectionScreenAndroidState
           croppedSize: img.croppedSize,
         ),
       );
-      await _processImage(inputImage, detectedFaces);
+      await _processImage(inputImage, detectedFaces, img);
       if (mounted) {
         setState(
           () => _isProcessing = false,
@@ -218,7 +217,8 @@ class _M7LivelynessDetectionScreenAndroidState
     }
   }
 
-  Future<void> _processImage(InputImage img, List<Face> faces) async {
+  Future<void> _processImage(
+      InputImage img, List<Face> faces, AnalysisImage analysisImage) async {
     try {
       if (faces.isEmpty) {
         _resetSteps();
@@ -288,6 +288,7 @@ class _M7LivelynessDetectionScreenAndroidState
       _detect(
         face: firstFace,
         step: _steps[_stepsKey.currentState?.currentIndex ?? 0].step,
+        img: analysisImage,
       );
     } catch (e) {
       _startProcessing();
@@ -318,6 +319,7 @@ class _M7LivelynessDetectionScreenAndroidState
   void _detect({
     required Face face,
     required M7LivelynessStep step,
+    required AnalysisImage img,
   }) async {
     switch (step) {
       case M7LivelynessStep.blink:
@@ -352,14 +354,51 @@ class _M7LivelynessDetectionScreenAndroidState
         if (face.smilingProbability != null) {
           smileProgress.value.add(face.smilingProbability!);
           calculateSmileProgression();
-          // smileProgress.notifyListeners();
         }
-        // _startProcessing();
-        // const double smileThreshold = 0.75;
-
-        // if ((face.smilingProbability ?? 0) > (smileThreshold)) {
-        //   await _completeStep(step: step);
-        // }
+        break;
+      case M7LivelynessStep.holdStill:
+        final imageWidth = img.width;
+        final imageHeight = img.height;
+        bool isCenteredHorizontally =
+            (face.boundingBox.left + face.boundingBox.width / 2) / imageWidth >=
+                    0.45 &&
+                (face.boundingBox.left + face.boundingBox.width / 2) /
+                        imageWidth <=
+                    0.55;
+        bool isCenteredVertically =
+            (face.boundingBox.top + face.boundingBox.height / 2) /
+                        imageHeight >=
+                    0.45 &&
+                (face.boundingBox.top + face.boundingBox.height / 2) /
+                        imageHeight <=
+                    0.55;
+        if (face.headEulerAngleY != null && face.headEulerAngleZ != null) {
+          // Check if face is facing front and not tilted significantly
+          bool isUpright = face.headEulerAngleY!.abs() < 10 &&
+              face.headEulerAngleZ!.abs() < 10;
+          // Check if face occupies a reasonable portion of the frame
+          bool isReasonableSize = face.boundingBox.width > imageWidth * 0.1 &&
+              face.boundingBox.height > imageHeight * 0.1;
+          if (isCenteredHorizontally &&
+              isCenteredVertically &&
+              isUpright &&
+              isReasonableSize) {
+            _cameraState?.when(
+              onPhotoMode: (p0) => Future.delayed(
+                const Duration(milliseconds: 500),
+                () => p0.takePhoto().then(
+                  (value) {
+                    setState(() {
+                      imgPath = value;
+                    });
+                  },
+                ),
+              ),
+            );
+            _startProcessing();
+            await _completeStep(step: step);
+          }
+        }
         break;
     }
   }
@@ -474,63 +513,9 @@ class _M7LivelynessDetectionScreenAndroidState
   //? =========================================================
   @override
   Widget build(BuildContext context) {
-    final size = MediaQuery.of(context).size;
     return Stack(
       alignment: Alignment.center,
       children: [
-        // _isInfoStepCompleted
-        //     ? Container(
-        //         height: size.height,
-        //         width: size.width,
-        //         decoration: BoxDecoration(
-        //           color: Colors.white.withOpacity(0.8),
-        //         ),
-        //       )
-        //     : const SizedBox(),
-        // _isInfoStepCompleted
-        //     ? SizedBox(
-        //         // height: 350,
-        //         height:
-        //             size.width > 600 ? size.height / 1.8 : size.height / 2.44,
-        //         width: size.width > 600 ? size.width / 2.2 : size.width / 1.92,
-        //         // width: 200,
-        //         child: ClipOval(
-        //           child: CameraAwesomeBuilder.custom(
-        //             flashMode: FlashMode.auto,
-        //             previewFit: CameraPreviewFit.cover,
-        //             sensor: Sensors.front,
-        //             onImageForAnalysis: (img) => _processCameraImage(img),
-        //             imageAnalysisConfig: AnalysisConfig(
-        //               autoStart: true,
-        //               androidOptions: const AndroidAnalysisOptions.nv21(
-        //                 width: 250,
-        //               ),
-        //               maxFramesPerSecond: 30,
-        //             ),
-        //             builder: (state, previewSize, previewRect) {
-        //               _cameraState = state;
-        //               return M7PreviewDecoratorWidget(
-        //                 cameraState: state,
-        //                 faceDetectionStream: _faceDetectionController,
-        //                 previewSize: previewSize,
-        //                 previewRect: previewRect,
-        //                 detectionColor:
-        //                     _steps[_stepsKey.currentState?.currentIndex ?? 0]
-        //                         .detectionColor,
-        //               );
-        //             },
-        //             saveConfig: SaveConfig.photo(
-        //               pathBuilder: () async {
-        //                 final String fileName = "${M7Utils.generate()}.jpg";
-        //                 final String path = await getTemporaryDirectory().then(
-        //                   (value) => value.path,
-        //                 );
-        //                 return "$path/$fileName";
-        //               },
-        //             ),
-        //           ),
-        //         ),
-        //       )
         _isInfoStepCompleted
             ? Stack(
                 children: [

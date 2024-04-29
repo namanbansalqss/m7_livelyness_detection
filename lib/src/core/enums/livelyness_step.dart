@@ -3,4 +3,5 @@ enum M7LivelynessStep {
   turnLeft,
   turnRight,
   smile,
+  holdStill,
 }

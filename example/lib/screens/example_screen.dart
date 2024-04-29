@@ -41,8 +41,8 @@ class _M7ExpampleScreenState extends State<M7ExpampleScreen> {
     _veificationSteps.addAll(
       [
         M7LivelynessStepItem(
-          step: M7LivelynessStep.blink,
-          title: "Blink",
+          step: M7LivelynessStep.holdStill,
+          title: "Hold Still",
           isCompleted: false,
           // detectionColor: Colors.amber,
         ),
@@ -106,6 +106,8 @@ class _M7ExpampleScreenState extends State<M7ExpampleScreen> {
         return "Turn Your Head Right";
       case M7LivelynessStep.smile:
         return "Smile";
+      case M7LivelynessStep.holdStill:
+        return "Hold Still";
     }
   }
 
@@ -119,6 +121,8 @@ class _M7ExpampleScreenState extends State<M7ExpampleScreen> {
         return "Detects Right Turn of the on the face visible in camera";
       case M7LivelynessStep.smile:
         return "Detects Smile on the face visible in camera";
+      case M7LivelynessStep.holdStill:
+        return "Hold still to capture your photo";
     }
   }
 
@@ -130,11 +134,26 @@ class _M7ExpampleScreenState extends State<M7ExpampleScreen> {
   }
 
   void _onStepValChanged(M7LivelynessStep step, bool value) {
-    if (!value && _veificationSteps.length == 1) {
+    if (!value && step == M7LivelynessStep.holdStill) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: const Text(
-            "Need to have atleast 1 step of verification",
+            "Hold still will always enabled",
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 20,
+            ),
+          ),
+          backgroundColor: Colors.red.shade900,
+        ),
+      );
+      return;
+    }
+    if (!value && _veificationSteps.length == 2) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text(
+            "Need to have atleast 2 step of verification and hold still step",
             style: TextStyle(
               color: Colors.white,
               fontSize: 20,

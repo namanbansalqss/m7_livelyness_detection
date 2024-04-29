@@ -108,7 +108,7 @@ class M7AndroidFaceDetectorPainter extends CustomPainter {
                 Paint()
                   ..color = detectionColor ??
                       M7LivelynessDetection.instance.contourDotColor ??
-                      Colors.purple.shade800
+                      const Color(0xffFA9C0B)
                   ..strokeWidth =
                       M7LivelynessDetection.instance.contourDotRadius ?? 2,
               );

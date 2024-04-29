@@ -1,9 +1,12 @@
+import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
 import 'package:m7_livelyness_detection/index.dart';
 
 class M7LivelynessDetectionStepOverlay extends StatefulWidget {
   final List<M7LivelynessStepItem> steps;
   final VoidCallback onCompleted;
   final VoidCallback initiateSmileDetector;
+
   const M7LivelynessDetectionStepOverlay(
       {Key? key,
       required this.steps,
@@ -125,7 +128,8 @@ class M7LivelynessDetectionStepOverlayState
             mainAxisSize: MainAxisSize.min,
             children: [
               Expanded(
-                flex: _currentIndex + 1,
+                flex:
+                    _currentIndex == 0 ? _currentIndex + 1 : _currentIndex + 1,
                 child: Container(
                   decoration: BoxDecoration(
                     borderRadius: const BorderRadius.only(
@@ -137,7 +141,10 @@ class M7LivelynessDetectionStepOverlayState
                 ),
               ),
               Expanded(
-                flex: widget.steps.length - (_currentIndex + 1),
+                flex: widget.steps.length -
+                    (_currentIndex == 0
+                        ? _currentIndex + 2
+                        : _currentIndex + 1),
                 child: Container(
                   color: Colors.transparent,
                 ),
@@ -155,30 +162,33 @@ class M7LivelynessDetectionStepOverlayState
               itemCount: widget.steps.length,
               itemBuilder: (context, index) {
                 return _buildAnimatedWidget(
-                  Padding(
-                    padding: const EdgeInsets.all(10),
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(20),
-                        boxShadow: const [
-                          BoxShadow(
-                            blurRadius: 5,
-                            spreadRadius: 2.5,
-                            color: Colors.black12,
-                          ),
-                        ],
-                      ),
-                      alignment: Alignment.center,
-                      margin: const EdgeInsets.symmetric(horizontal: 30),
+                  Visibility(
+                    visible: index != 0 && _currentIndex != 0,
+                    child: Padding(
                       padding: const EdgeInsets.all(10),
-                      child: Text(
-                        widget.steps[index].title,
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(
-                          color: Colors.black,
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(20),
+                          boxShadow: const [
+                            BoxShadow(
+                              blurRadius: 5,
+                              spreadRadius: 2.5,
+                              color: Colors.black12,
+                            ),
+                          ],
+                        ),
+                        alignment: Alignment.center,
+                        margin: const EdgeInsets.symmetric(horizontal: 30),
+                        padding: const EdgeInsets.all(10),
+                        child: Text(
+                          widget.steps[index].title,
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                            color: Colors.black,
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       ),
                     ),
@@ -191,6 +201,27 @@ class M7LivelynessDetectionStepOverlayState
         ),
         const Spacer(
           flex: 14,
+        ),
+        Visibility(
+          visible: _currentIndex == 0,
+          child: const Align(
+            alignment: Alignment.bottomCenter,
+            child: Padding(
+              padding: EdgeInsets.symmetric(
+                vertical: 50,
+                horizontal: 24,
+              ),
+              child: Text(
+                'Stay in the frame',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: Colors.black,
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ),
         ),
       ],
     );
