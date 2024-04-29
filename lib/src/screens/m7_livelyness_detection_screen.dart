@@ -226,7 +226,6 @@ class _MLivelyness7DetectionScreenState
         _detect(
           face: faces.first,
           step: _steps[_stepsKey.currentState?.currentIndex ?? 0].step,
-          inputImage: inputImage,
         );
       }
     } else {
@@ -440,8 +439,9 @@ class _MLivelyness7DetectionScreenState
 
         if (face.smilingProbability != null) {
           smileProgress.value.add(face.smilingProbability!);
+          calculateSmileProgression();
         }
-        _startProcessing();
+        // _startProcessing();
 
         break;
       case M7LivelynessStep.holdStill:
