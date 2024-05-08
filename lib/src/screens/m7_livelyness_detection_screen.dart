@@ -472,13 +472,16 @@ class _MLivelyness7DetectionScreenState
               isCenteredVertically &&
               isUpright &&
               isReasonableSize) {
-            final XFile? clickedImage = await _cameraController?.takePicture();
-            if (clickedImage != null) {
-              setState(() {
-                finalImage = clickedImage;
-              });
-              _startProcessing();
-              await _completeStep(step: step);
+            if (mounted && finalImage == null) {
+              final XFile? clickedImage =
+                  await _cameraController?.takePicture();
+              if (clickedImage != null) {
+                setState(() {
+                  finalImage = clickedImage;
+                });
+                _startProcessing();
+                await _completeStep(step: step);
+              }
             }
           }
         }
