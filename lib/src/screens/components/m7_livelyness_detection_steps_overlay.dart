@@ -81,15 +81,19 @@ class M7LivelynessDetectionStepOverlayState
           milliseconds: 500,
         ),
       );
-      await _pageController.nextPage(
-        duration: const Duration(milliseconds: 500),
-        curve: Curves.easeIn,
-      );
+      if (_pageController.hasClients) {
+        await _pageController.nextPage(
+          duration: const Duration(milliseconds: 500),
+          curve: Curves.easeIn,
+        );
+      }
       await Future.delayed(
         const Duration(seconds: 2),
       );
-      _hideLoader();
-      setState(() => _currentIndex++);
+      if (mounted) {
+        _hideLoader();
+        setState(() => _currentIndex++);
+      }
       widget.initiateSmileDetector();
     } else {
       widget.onCompleted();

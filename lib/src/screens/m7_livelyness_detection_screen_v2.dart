@@ -384,15 +384,14 @@ class _M7LivelynessDetectionScreenAndroidState
               isUpright &&
               isReasonableSize) {
             _cameraState?.when(
-              onPhotoMode: (p0) => Future.delayed(
-                const Duration(milliseconds: 500),
-                () => p0.takePhoto().then(
-                  (value) {
+              onPhotoMode: (p0) => p0.takePhoto().then(
+                (value) {
+                  if (mounted && imgPath == null) {
                     setState(() {
                       imgPath = value;
                     });
-                  },
-                ),
+                  }
+                },
               ),
             );
             _startProcessing();
