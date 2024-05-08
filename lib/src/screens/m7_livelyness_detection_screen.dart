@@ -473,15 +473,18 @@ class _MLivelyness7DetectionScreenState
               isUpright &&
               isReasonableSize) {
             if (mounted && finalImage == null) {
-              final XFile? clickedImage =
-                  await _cameraController?.takePicture();
-              if (clickedImage != null) {
-                setState(() {
-                  finalImage = clickedImage;
-                });
-                _startProcessing();
-                await _completeStep(step: step);
-              }
+              _cameraController
+                  ?.takePicture()
+                  .then((value) => setState(() {
+                        finalImage = value;
+                      }))
+                  .onError((error, stackTrace) {
+                if (kDebugMode) {
+                  print(error);
+                }
+              });
+              _startProcessing();
+              await _completeStep(step: step);
             }
           }
         }
