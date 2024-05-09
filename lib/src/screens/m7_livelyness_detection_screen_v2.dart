@@ -220,10 +220,10 @@ class _M7LivelynessDetectionScreenAndroidState
   Future<void> _processImage(
       InputImage img, List<Face> faces, AnalysisImage analysisImage) async {
     try {
-      if (faces.isEmpty) {
-        _resetSteps();
-        return;
-      }
+      // if (faces.isEmpty) {
+      //   _resetSteps();
+      //   return;
+      // }
       final Face firstFace = faces.first;
       final landmarks = firstFace.landmarks;
       // Get landmark positions for relevant facial features
